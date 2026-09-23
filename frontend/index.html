@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================================
+         Meta Tags - SEO & Responsive Setup
+         ============================================================ -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Test your knowledge with our interactive online quiz. Multiple categories, timed questions, and instant results." />
+    <meta name="theme-color" content="#7c3aed" />
+    <title>QuizMaster — Online Quiz App</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+    <!-- App Stylesheet -->
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+
+<div class="loading-overlay" id="loadingOverlay" role="status" aria-live="polite">
+    <div class="spinner"></div>
+    <p class="loading-text" id="loadingText">Loading...</p>
+</div>
+
+<!-- ============================================================
+     Toast Notification — Error/Success messages
+     ============================================================ -->
+<div class="toast" id="toast" role="alert"></div>
+
+<!-- ============================================================
+     Main App Container
+     ============================================================ -->
+<div class="container">
+
+    <!-- ========================================================
+         PAGE 1: HOME — Welcome & Start Form
+         ======================================================== -->
+    <div class="page active" id="home-page" role="main">
+
+        <span class="home-logo" role="img" aria-label="Brain emoji">🧠</span>
+
+        <h1 class="home-title">
+            <span class="text-gradient">QuizMaster</span>
+        </h1>
+
+        <p class="home-subtitle">
+            Challenge yourself with curated questions across Java, Spring Boot, SQL, and more!
+        </p>
+
+        <!-- Stats badges -->
+        <div class="home-stats" id="homeStats">
+            <div class="stat-badge">📚 <span id="statCount">30</span> Questions</div>
+            <div class="stat-badge">⏱️ <span>30s</span> Per Question</div>
+            <div class="stat-badge">🏆 <span>4</span> Categories</div>
+        </div>
+
+        <!-- Start Form Card -->
+        <div class="card start-form">
+            <h2 style="margin-bottom: var(--space-xl); font-size: 1.3rem;">
+                Start Your Quiz 🚀
+            </h2>
+
+            <form id="startForm" novalidate>
+
+                <!-- Player Name -->
+                <div class="form-group">
+                    <label class="form-label" for="playerName">Your Name</label>
+                    <input
+                        type="text"
+                        id="playerName"
+                        class="form-input"
+                        placeholder="Enter your name..."
+                        maxlength="50"
+                        autocomplete="name"
+                        required
+                    />
+                </div>
+
+                <!-- Number of Questions + Category in a row -->
+                <div class="quiz-options-row">
+
+                    <!-- Number of Questions -->
+                    <div class="form-group">
+                        <label class="form-label" for="questionCount">Questions</label>
+                        <select id="questionCount" class="form-select">
+                            <option value="5">5 Questions</option>
+                            <option value="10" selected>10 Questions</option>
+                            <option value="15">15 Questions</option>
+                            <option value="20">20 Questions</option>
+                        </select>
+                    </div>
+
+                    <!-- Category Filter -->
+                    <div class="form-group">
+                        <label class="form-label" for="category">Category</label>
+                        <select id="category" class="form-select">
+                            <option value="">All Categories</option>
+                            <!-- Options loaded from API -->
+                        </select>
+                    </div>
+
+                </div>
+
+                <!-- Difficulty Filter -->
+                <div class="form-group">
+                    <label class="form-label" for="difficulty">Difficulty</label>
+                    <select id="difficulty" class="form-select">
+                        <option value="">All Difficulties</option>
+                        <option value="EASY">🟢 Easy</option>
+                        <option value="MEDIUM">🟡 Medium</option>
+                        <option value="HARD">🔴 Hard</option>
+                    </select>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="start-btn-wrap">
+                    <button type="submit" id="startBtn" class="btn btn-primary btn-lg">
+                        ⚡ Start Quiz
+                    </button>
+                </div>
+
+            </form>
+        </div>
+
+    </div><!-- end #home-page -->
+
+
+    <!-- ========================================================
+         PAGE 2: QUIZ — Active Quiz Screen
+         ======================================================== -->
+    <div class="page" id="quiz-page">
+
+        <!-- Header: Progress info + Circular Timer -->
+        <div class="quiz-header">
+            <div class="quiz-info">
+                <span class="quiz-player-name" id="quizPlayerName">Player</span>
+                <span class="quiz-progress-text">
+                    Question <span id="currentQNum">1</span> of <span id="totalQNum">10</span>
+                </span>
+            </div>
+
+            <!-- Circular countdown timer -->
+            <div class="timer-container">
+                <span class="timer-label">Time Left</span>
+                <div class="timer-circle" id="timerCircle">
+                    <svg class="timer-svg" viewBox="0 0 64 64">
+                        <circle class="timer-track" cx="32" cy="32" r="26"/>
+                        <circle class="timer-fill" id="timerArc" cx="32" cy="32" r="26"/>
+                    </svg>
+                    <div class="timer-text" id="timerText">30</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Overall progress bar -->
+        <div class="progress-bar-container">
+            <div class="progress-bar-fill" id="progressBar" style="width: 0%"></div>
+        </div>
+
+        <!-- Question dot navigator -->
+        <div class="dot-navigator" id="dotNavigator" role="navigation" aria-label="Question navigation"></div>
+
+        <!-- Question Card -->
+        <div class="card question-card" id="questionCard">
+
+            <!-- Category + Difficulty badges + Question number -->
+            <div class="question-meta">
+                <span class="badge badge-category" id="questionCategory">Java</span>
+                <span class="badge badge-easy" id="questionDifficulty">Easy</span>
+                <span class="question-number" id="questionNumBadge">Q1</span>
+            </div>
+
+            <!-- The actual question text -->
+            <p class="question-text" id="questionText">
+                Loading question...
+            </p>
+
+            <!-- 4 Answer option buttons -->
+            <div class="options-grid" id="optionsGrid" role="group" aria-label="Answer options">
+                <!-- Options are dynamically generated by JavaScript -->
+            </div>
+
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div class="quiz-nav">
+
+            <div class="nav-left">
+                <!-- Previous button — disabled on first question -->
+                <button class="btn btn-secondary" id="prevBtn" onclick="goToPrev()" disabled>
+                    ← Previous
+                </button>
+            </div>
+
+            <div class="nav-right">
+                <!-- Next / Submit button -->
+                <button class="btn btn-primary" id="nextBtn" onclick="goToNext()">
+                    Next →
+                </button>
+                <!-- Submit button (shown on last question) -->
+                <button class="btn btn-success" id="submitBtn" onclick="submitQuiz()" style="display:none;">
+                    Submit Quiz ✓
+                </button>
+            </div>
+
+        </div>
+
+    </div><!-- end #quiz-page -->
+
+
+    <!-- ========================================================
+         PAGE 3: RESULT — Score & Answer Review
+         (result.html is a separate page; this handles
+          in-page result display for SPA-style navigation)
+         ======================================================== -->
+    <div class="page" id="result-page">
+
+        <!-- Result Header -->
+        <div class="result-header">
+            <span class="result-emoji" id="resultEmoji">🏆</span>
+            <h1 class="result-title">
+                <span class="text-gradient" id="resultGradeText">Excellent!</span>
+            </h1>
+            <p class="result-message" id="resultMessage">You did a great job!</p>
+        </div>
+
+        <!-- Animated Score Circle -->
+        <div class="score-circle-wrap">
+            <div class="score-circle">
+                <svg class="score-svg" viewBox="0 0 180 180">
+                    <circle class="score-track" cx="90" cy="90" r="75"/>
+                    <circle class="score-arc" id="scoreArc" cx="90" cy="90" r="75"/>
+                </svg>
+                <div class="score-circle-content">
+                    <span class="score-number text-gradient" id="scoreNumber">0</span>
+                    <span class="score-total" id="scoreTotal">/ 10</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Grid: Percentage, Grade, Time -->
+        <div class="result-stats">
+            <div class="result-stat">
+                <div class="result-stat-value text-gradient" id="resultPercentage">0%</div>
+                <div class="result-stat-label">Percentage</div>
+            </div>
+            <div class="result-stat">
+                <div class="result-stat-value" id="resultGrade" style="color: var(--color-accent);">—</div>
+                <div class="result-stat-label">Grade</div>
+            </div>
+            <div class="result-stat">
+                <div class="result-stat-value" id="resultTime" style="color: var(--color-secondary);">—</div>
+                <div class="result-stat-label">Time Taken</div>
+            </div>
+        </div>
+
+        <!-- Answer Review Section -->
+        <div class="review-section">
+            <h2 class="review-title">📋 Answer Review</h2>
+            <div id="reviewList">
+                <!-- Dynamically populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="result-actions">
+            <button class="btn btn-primary btn-lg" onclick="playAgain()">
+                🔄 Play Again
+            </button>
+            <button class="btn btn-secondary" onclick="shareResult()">
+                📤 Share Result
+            </button>
+        </div>
+
+    </div><!-- end #result-page -->
+
+</div><!-- end .container -->
+
+
+<!-- ============================================================
+     JavaScript — All quiz logic
+     ============================================================ -->
+<script src="script.js"></script>
+
+</body>
+</html>
